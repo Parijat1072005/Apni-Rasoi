@@ -1,0 +1,62 @@
+name: Deploy — Apni Rasoi
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build client
+        run: cd client && npm ci && npm run build
+
+      - name: Build admin
+        run: cd admin  && npm ci && npm run build
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host:     ${{ secrets.AWS_EC2_HOST }}
+          username: ${{ secrets.AWS_EC2_USER }}
+          key:      ${{ secrets.AWS_EC2_SSH_KEY }}
+          script: |
+            set -e
+            echo "📦 Pulling latest code..."
+            cd /var/www/apni-rasoi
+            git pull origin main
+
+            echo "📦 Installing server deps..."
+            cd server && npm ci --omit=dev
+
+            echo "🏗️  Building client..."
+            cd ../client && npm ci && npm run build
+
+            echo "🏗️  Building admin..."
+            cd ../admin && npm ci && npm run build
+
+            echo "♻️  Restarting server with PM2..."
+            cd ..
+            pm2 reload ecosystem.config.cjs --env production
+
+            echo "🔄 Reloading Nginx..."
+            sudo systemctl reload nginx
+
+            echo "✅ Deployment complete!"
+
+      - name: Notify success
+        if: success()
+        run: echo "🚀 Deployed to production successfully!"
+
+      - name: Notify failure
+        if: failure()
+        run: echo "❌ Deployment failed — check the logs"
