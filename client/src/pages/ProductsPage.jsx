@@ -247,14 +247,14 @@ export default function ProductsPage() {
     const { data, isLoading } = useQuery({
         queryKey: ['products', queryParams],
         queryFn: () => productService.getAll(queryParams),
-        select: (d) => d.data,
+        select: (d) => d.data?.data,
         keepPreviousData: true,
     });
 
     const { data: categories } = useQuery({
         queryKey: ['categories'],
         queryFn: () => categoryService.getAll(),
-        select: (d) => d.data.data.categories,
+        select: (d) => d.data?.data?.categories,
     });
 
     const products = data?.data || [];

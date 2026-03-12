@@ -85,14 +85,13 @@ productSchema.index({ isFeatured: 1, isActive: 1 });
 productSchema.index({ name: 'text', description: 'text', tags: 'text' });
 
 // Auto slug
-productSchema.pre('save', function (next) {
+productSchema.pre('save', function () {
   if (this.isModified('name')) {
     this.slug = this.name
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '');
   }
-  next();
 });
 
 const Product = mongoose.model('Product', productSchema);

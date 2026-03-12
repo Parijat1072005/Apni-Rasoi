@@ -39,13 +39,13 @@ export default function HomePage() {
   const { data: featuredData, isLoading: featuredLoading } = useQuery({
     queryKey: ['products', 'featured'],
     queryFn:  () => productService.getAll({ isFeatured: true, limit: 8 }),
-    select:   (d) => d.data.data,
+    select:   (d) => d.data?.data?.data,
   });
 
   const { data: bestsellerData, isLoading: bestsellerLoading } = useQuery({
     queryKey: ['products', 'bestsellers'],
     queryFn:  () => productService.getAll({ isBestseller: true, limit: 4 }),
-    select:   (d) => d.data.data,
+    select:   (d) => d.data?.data?.data,
   });
 
   const { data: categoriesData } = useQuery({

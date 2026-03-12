@@ -88,12 +88,11 @@ orderSchema.index({ status: 1 });
 orderSchema.index({ 'payment.status': 1 });
 
 // Auto-generate order number  e.g. AR-20240315-0001
-orderSchema.pre('save', async function (next) {
-  if (!this.isNew) return next();
+orderSchema.pre('save', async function () {
+  if (!this.isNew) return;
   const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
   const count = await mongoose.model('Order').countDocuments();
   this.orderNumber = `AR-${today}-${String(count + 1).padStart(4, '0')}`;
-  next();
 });
 
 const Order = mongoose.model('Order', orderSchema);

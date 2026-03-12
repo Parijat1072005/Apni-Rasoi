@@ -334,8 +334,8 @@ export default function ProductsPage() {
         queryKey: ['admin-products', page, search],
         queryFn: () => productService.getAll({ page, limit: 15, search: search || undefined }),
         select: (d) => ({
-            data: d.data?.data ?? [],
-            pagination: d.data?.pagination ?? {},
+            data: d.data?.data?.data ?? [],
+            pagination: d.data?.data?.pagination ?? {},
         }),
         keepPreviousData: true,
     });
@@ -343,7 +343,7 @@ export default function ProductsPage() {
     const { data: categories } = useQuery({
         queryKey: ['categories'],
         queryFn: () => categoryService.getAll({ includeInactive: true }),
-        select: (d) => d.data.data.categories,
+        select: (d) => d.data?.data?.categories,
     });
 
     const deleteMutation = useMutation({
