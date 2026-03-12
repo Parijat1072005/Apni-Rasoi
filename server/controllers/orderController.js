@@ -15,7 +15,7 @@ const getRazorpay = () => {
       throw new Error('RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET must be set in .env');
     }
     _razorpay = new Razorpay({
-      key_id:     process.env.RAZORPAY_KEY_ID,
+      key_id: process.env.RAZORPAY_KEY_ID,
       key_secret: process.env.RAZORPAY_KEY_SECRET,
     });
   }
@@ -30,23 +30,23 @@ export const createRazorpayOrder = async (req, res, next) => {
       return ApiResponse.error(res, 'Cart is empty', 400);
     }
 
-    const subtotal      = cart.items.reduce((s, i) => s + i.price * i.quantity, 0);
-    const discount      = cart.coupon?.discount || 0;
+    const subtotal = cart.items.reduce((s, i) => s + i.price * i.quantity, 0);
+    const discount = cart.coupon?.discount || 0;
     const shippingCharge = subtotal >= 499 ? 0 : 60;
-    const tax           = Math.round((subtotal - discount) * 0.05);
-    const total         = subtotal - discount + shippingCharge + tax;
+    const tax = Math.round((subtotal - discount) * 0.05);
+    const total = subtotal - discount + shippingCharge + tax;
 
     const rzpOrder = await getRazorpay().orders.create({
-      amount:   Math.round(total * 100), // paise
+      amount: Math.round(total * 100), // paise
       currency: 'INR',
-      receipt:  `receipt_${Date.now()}`,
+      receipt: `receipt_${Date.now()}`,
     });
 
     return ApiResponse.success(res, {
       razorpayOrderId: rzpOrder.id,
-      amount:          rzpOrder.amount,
-      currency:        rzpOrder.currency,
-      keyId:           process.env.RAZORPAY_KEY_ID,
+      amount: rzpOrder.amount,
+      currency: rzpOrder.currency,
+      keyId: process.env.RAZORPAY_KEY_ID,
     });
   } catch (error) { next(error); }
 };
@@ -61,7 +61,7 @@ export const placeOrder = async (req, res, next) => {
 
     if (!shippingAddress) return ApiResponse.error(res, 'Shipping address is required', 400);
 
-    // ── Verify Razorpay signature for online payments ──
+    // ── Verify Razorpay signature ─────────────────────────────────────────
     if (paymentMethod === 'razorpay') {
       if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
         return ApiResponse.error(res, 'Payment details missing', 400);
@@ -70,73 +70,85 @@ export const placeOrder = async (req, res, next) => {
         .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
         .update(`${razorpayOrderId}|${razorpayPaymentId}`)
         .digest('hex');
-
       if (generatedSig !== razorpaySignature) {
         return ApiResponse.error(res, 'Payment verification failed', 400);
       }
     }
 
-    // ── Fetch cart ────────────────────────────────────────────────────────────
-    const cart = await Cart.findOne({ user: req.user._id });
-    if (!cart || !cart.items.length) {
-      return ApiResponse.error(res, 'Cart is empty', 400);
+    // ── Fetch cart WITH populate ──────────────────────────────────────────
+    const cart = await Cart.findOne({ user: req.user._id })
+      .populate('items.product', 'name images isActive variants');
+
+    if (!cart) {
+      return ApiResponse.error(res, 'Cart not found. Please add items and try again.', 400);
+    }
+    if (!cart.items || cart.items.length === 0) {
+      return ApiResponse.error(res, 'Your cart is empty. Please add items before placing an order.', 400);
     }
 
-    // ── Validate stock and deduct ─────────────────────────────────────────────
+    // ── Validate stock ────────────────────────────────────────────────────
     const stockOps = [];
     for (const item of cart.items) {
-      const product = await Product.findById(item.product);
+      const product = item.product; // already populated
       if (!product || !product.isActive) {
         return ApiResponse.error(res, `"${item.name}" is no longer available`, 400);
       }
       const variant = product.variants.id(item.variantId);
       if (!variant || variant.stock < item.quantity) {
-        return ApiResponse.error(res, `Insufficient stock for "${item.name} (${item.variantLabel})"`, 400);
+        return ApiResponse.error(
+          res,
+          `Insufficient stock for "${item.name} (${item.variantLabel})"`,
+          400
+        );
       }
       stockOps.push({ product, variant, quantity: item.quantity });
     }
 
-    // All good — deduct stock
+    // ── Deduct stock ──────────────────────────────────────────────────────
     for (const { product, variant, quantity } of stockOps) {
-      variant.stock     -= quantity;
-      product.totalSold += quantity;
+      variant.stock -= quantity;
+      product.totalSold = (product.totalSold || 0) + quantity;
       await product.save();
     }
 
-    // ── Calculate pricing ─────────────────────────────────────────────────────
-    const subtotal      = cart.items.reduce((s, i) => s + i.price * i.quantity, 0);
-    const discount      = cart.coupon?.discount || 0;
+    // ── Calculate pricing ─────────────────────────────────────────────────
+    const subtotal = cart.items.reduce((s, i) => s + i.price * i.quantity, 0);
+    const discount = cart.coupon?.discount || 0;
     const shippingCharge = subtotal >= 499 ? 0 : 60;
-    const tax           = Math.round((subtotal - discount) * 0.05);
-    const total         = subtotal - discount + shippingCharge + tax;
+    const tax = Math.round((subtotal - discount) * 0.05);
+    const total = subtotal - discount + shippingCharge + tax;
 
-    // ── Create order ──────────────────────────────────────────────────────────
+    // ── Create order ──────────────────────────────────────────────────────
     const order = await Order.create({
-      user:            req.user._id,
-      items:           cart.items.map((i) => ({
-        product:      i.product,
-        variantId:    i.variantId,
+      user: req.user._id,
+      items: cart.items.map((i) => ({
+        product: i.product._id, // use _id since product is populated
+        variantId: i.variantId,
         variantLabel: i.variantLabel,
-        name:         i.name,
-        image:        i.image,
-        price:        i.price,
-        quantity:     i.quantity,
+        name: i.name,
+        image: i.image,
+        price: i.price,
+        quantity: i.quantity,
       })),
       shippingAddress,
-      pricing:         { subtotal, shippingCharge, discount, tax, total },
-      coupon:          cart.coupon?.code ? { code: cart.coupon.code, discount } : {},
+      pricing: { subtotal, shippingCharge, discount, tax, total },
+      coupon: cart.coupon?.code ? { code: cart.coupon.code, discount } : {},
       payment: {
-        method:             paymentMethod,
-        status:             paymentMethod === 'razorpay' ? 'paid' : 'pending',
-        razorpayOrderId:    razorpayOrderId   || '',
-        razorpayPaymentId:  razorpayPaymentId || '',
-        razorpaySignature:  razorpaySignature || '',
-        paidAt:             paymentMethod === 'razorpay' ? new Date() : undefined,
+        method: paymentMethod,
+        status: paymentMethod === 'razorpay' ? 'paid' : 'pending',
+        razorpayOrderId: razorpayOrderId || '',
+        razorpayPaymentId: razorpayPaymentId || '',
+        razorpaySignature: razorpaySignature || '',
+        paidAt: paymentMethod === 'razorpay' ? new Date() : undefined,
       },
-      statusHistory: [{ status: 'pending', note: 'Order placed', updatedBy: req.user._id }],
+      statusHistory: [{
+        status: 'pending',
+        note: 'Order placed',
+        updatedBy: req.user._id,
+      }],
     });
 
-    // ── Mark coupon as used ───────────────────────────────────────────────────
+    // ── Mark coupon used ──────────────────────────────────────────────────
     if (cart.coupon?.code) {
       await Coupon.findOneAndUpdate(
         { code: cart.coupon.code },
@@ -147,18 +159,36 @@ export const placeOrder = async (req, res, next) => {
       );
     }
 
-    // ── Clear cart ────────────────────────────────────────────────────────────
-    cart.items  = [];
+    // ── Clear cart ────────────────────────────────────────────────────────
+    cart.items = [];
     cart.coupon = { code: null, discount: 0, percentage: 0 };
     await cart.save();
 
-    // ── Send order confirmation email (non-blocking) ──────────────────────────
-    const { subject, html } = emailTemplates.orderConfirmation(
-      req.user.name, order.orderNumber, total
-    );
-    sendEmail({ to: req.user.email, subject, html }).catch(() => {});
+    // ── Send confirmation email (non-blocking) ────────────────────────────
+    try {
+      const { subject, html } = emailTemplates.orderConfirmation(
+        req.user.name,
+        order  // ← pass full order object, not just orderNumber
+      );
+      sendEmail({ to: req.user.email, subject, html }).catch(() => { });
+    } catch {
+      // email failure must never crash the order
+    }
 
     return ApiResponse.success(res, { order }, 'Order placed successfully', 201);
+  } catch (error) { next(error); }
+};
+
+// ── Public: Track order by orderNumber ───────────────────────────────────────
+export const trackOrder = async (req, res, next) => {
+  try {
+    const order = await Order.findOne({
+      orderNumber: req.params.orderNumber.toUpperCase(),
+    }).select('_id orderNumber status shipping statusHistory pricing.total createdAt');
+
+    if (!order) return ApiResponse.error(res, 'Order not found', 404);
+
+    return ApiResponse.success(res, { order });
   } catch (error) { next(error); }
 };
 
@@ -169,7 +199,7 @@ export const getMyOrders = async (req, res, next) => {
     const filter = { user: req.user._id };
     if (status) filter.status = status;
 
-    const total  = await Order.countDocuments(filter);
+    const total = await Order.countDocuments(filter);
     const orders = await Order.find(filter)
       .sort('-createdAt')
       .skip((page - 1) * limit)
@@ -230,8 +260,8 @@ export const cancelOrder = async (req, res, next) => {
 
     order.status = 'cancelled';
     order.statusHistory.push({
-      status:    'cancelled',
-      note:      req.body.reason || 'Cancelled by customer',
+      status: 'cancelled',
+      note: req.body.reason || 'Cancelled by customer',
       updatedBy: req.user._id,
     });
     await order.save();
@@ -245,11 +275,11 @@ export const adminGetAllOrders = async (req, res, next) => {
   try {
     const { page = 1, limit = 20, status, paymentStatus, search } = req.query;
     const filter = {};
-    if (status)        filter.status          = status;
+    if (status) filter.status = status;
     if (paymentStatus) filter['payment.status'] = paymentStatus;
-    if (search)        filter.orderNumber = { $regex: search, $options: 'i' };
+    if (search) filter.orderNumber = { $regex: search, $options: 'i' };
 
-    const total  = await Order.countDocuments(filter);
+    const total = await Order.countDocuments(filter);
     const orders = await Order.find(filter)
       .populate('user', 'name email phone')
       .sort('-createdAt')
@@ -265,7 +295,7 @@ export const updateOrderStatus = async (req, res, next) => {
   try {
     const { status, note, trackingNumber, carrier } = req.body;
 
-    const validStatuses = ['confirmed','processing','shipped','delivered','cancelled','refunded'];
+    const validStatuses = ['confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'];
     if (!validStatuses.includes(status)) {
       return ApiResponse.error(res, 'Invalid status', 400);
     }
@@ -279,12 +309,12 @@ export const updateOrderStatus = async (req, res, next) => {
     if (status === 'shipped') {
       order.shipping.shippedAt = new Date();
       if (trackingNumber) order.shipping.trackingNumber = trackingNumber;
-      if (carrier)        order.shipping.carrier        = carrier;
+      if (carrier) order.shipping.carrier = carrier;
 
       // Email: shipped
       if (order.user?.email) {
         const { subject, html } = emailTemplates.orderShipped(order.user.name, order);
-        sendEmail({ to: order.user.email, subject, html }).catch(() => {});
+        sendEmail({ to: order.user.email, subject, html }).catch(() => { });
       }
     }
 
@@ -295,7 +325,7 @@ export const updateOrderStatus = async (req, res, next) => {
       // Email: delivered + review prompt
       if (order.user?.email) {
         const { subject, html } = emailTemplates.orderDelivered(order.user.name, order);
-        sendEmail({ to: order.user.email, subject, html }).catch(() => {});
+        sendEmail({ to: order.user.email, subject, html }).catch(() => { });
       }
     }
 
@@ -309,9 +339,9 @@ export const updateOrderStatus = async (req, res, next) => {
 // ── Admin: Dashboard Stats ────────────────────────────────────────────────────
 export const getDashboardStats = async (req, res, next) => {
   try {
-    const now         = new Date();
+    const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const startOfDay   = new Date(now.setHours(0, 0, 0, 0));
+    const startOfDay = new Date(now.setHours(0, 0, 0, 0));
 
     const [
       totalOrders, totalRevenue,
@@ -332,11 +362,13 @@ export const getDashboardStats = async (req, res, next) => {
       // Revenue per month (last 6 months)
       Order.aggregate([
         { $match: { 'payment.status': 'paid', createdAt: { $gte: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000) } } },
-        { $group: {
-          _id: { year: { $year: '$createdAt' }, month: { $month: '$createdAt' } },
-          revenue: { $sum: '$pricing.total' },
-          orders:  { $sum: 1 },
-        }},
+        {
+          $group: {
+            _id: { year: { $year: '$createdAt' }, month: { $month: '$createdAt' } },
+            revenue: { $sum: '$pricing.total' },
+            orders: { $sum: 1 },
+          }
+        },
         { $sort: { '_id.year': 1, '_id.month': 1 } },
       ]),
 
@@ -351,7 +383,7 @@ export const getDashboardStats = async (req, res, next) => {
 
     return ApiResponse.success(res, {
       totalOrders,
-      totalRevenue:     totalRevenue[0]?.total || 0,
+      totalRevenue: totalRevenue[0]?.total || 0,
       todayOrders,
       monthOrders,
       pendingOrders,

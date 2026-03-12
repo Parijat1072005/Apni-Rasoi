@@ -29,6 +29,7 @@ export default function CartPage() {
     setCouponLoading(false);
     setCouponCode('');
   };
+  useEffect(() => { fetchCart(); }, []);
 
   if (!items.length) {
     return (

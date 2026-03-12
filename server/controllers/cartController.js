@@ -28,6 +28,7 @@ export const getCart = async (req, res, next) => {
     await cart.save();
 
     const totals = calculateCartTotals(cart);
+    console.log('Cart totals:', totals);
     return ApiResponse.success(res, { cart, totals });
   } catch (error) { next(error); }
 };
@@ -78,6 +79,7 @@ export const addToCart = async (req, res, next) => {
 
     await cart.save();
     const totals = calculateCartTotals(cart);
+    console.log('Cart totals:', totals);
     return ApiResponse.success(res, { cart, totals }, 'Cart updated');
   } catch (error) { next(error); }
 };
@@ -106,6 +108,7 @@ export const updateCartItem = async (req, res, next) => {
     item.quantity = quantity;
     await cart.save();
     const totals = calculateCartTotals(cart);
+    console.log('Cart totals:', totals);
     return ApiResponse.success(res, { cart, totals }, 'Quantity updated');
   } catch (error) { next(error); }
 };
@@ -119,6 +122,7 @@ export const removeCartItem = async (req, res, next) => {
     cart.items = cart.items.filter((item) => item._id.toString() !== req.params.itemId);
     await cart.save();
     const totals = calculateCartTotals(cart);
+    console.log('Cart totals:', totals);
     return ApiResponse.success(res, { cart, totals }, 'Item removed');
   } catch (error) { next(error); }
 };
@@ -181,6 +185,7 @@ export const applyCoupon = async (req, res, next) => {
     cart.coupon = { code: coupon.code, discount, percentage };
     await cart.save();
     const totals = calculateCartTotals(cart);
+    console.log('Cart totals:', totals);
 
     return ApiResponse.success(res, { cart, totals, discount }, `Coupon applied! You save ₹${discount}`);
   } catch (error) { next(error); }
@@ -194,6 +199,7 @@ export const removeCoupon = async (req, res, next) => {
     cart.coupon = { code: null, discount: 0, percentage: 0 };
     await cart.save();
     const totals = calculateCartTotals(cart);
+    console.log('Cart totals:', totals);
     return ApiResponse.success(res, { cart, totals }, 'Coupon removed');
   } catch (error) { next(error); }
 };

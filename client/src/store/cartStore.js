@@ -3,13 +3,13 @@ import { cartService } from '../services/cartService.js';
 import toast from 'react-hot-toast';
 
 const useCartStore = create((set, get) => ({
-  cart:      null,
-  totals:    { subtotal: 0, discount: 0, shippingCharge: 0, tax: 0, total: 0 },
+  cart: null,
+  totals: { subtotal: 0, discount: 0, shippingCharge: 0, tax: 0, total: 0 },
   isLoading: false,
-  isOpen:    false,    // Cart drawer open state
+  isOpen: false,    // Cart drawer open state
 
   // ── Drawer ────────────────────────────────────────────────────────────────
-  openCart:  () => set({ isOpen: true }),
+  openCart: () => set({ isOpen: true }),
   closeCart: () => set({ isOpen: false }),
 
   // ── Fetch Cart ────────────────────────────────────────────────────────────
@@ -17,7 +17,11 @@ const useCartStore = create((set, get) => ({
     set({ isLoading: true });
     try {
       const { data } = await cartService.getCart();
-      set({ cart: data.data.cart, totals: data.data.totals, isLoading: false });
+      // Server: ApiResponse.success(res, { cart, totals })
+      // Axios:  response.data = { success, message, data: { cart, totals } }
+      const cartData = data?.data?.cart ?? null;
+      const totalsData = data?.data?.totals ?? { subtotal: 0, discount: 0, shippingCharge: 0, tax: 0, total: 0 };
+      set({ cart: cartData, totals: totalsData, isLoading: false });
     } catch {
       set({ isLoading: false });
     }

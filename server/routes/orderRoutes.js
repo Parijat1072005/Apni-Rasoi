@@ -4,6 +4,7 @@ import {
   createRazorpayOrder, placeOrder,
   getMyOrders, getOrderById, cancelOrder,
   adminGetAllOrders, updateOrderStatus, getDashboardStats,
+  trackOrder,
 } from '../controllers/orderController.js';
 
 const router = express.Router();
@@ -17,8 +18,11 @@ router.patch('/admin/:id/status',  protect, adminOnly, updateOrderStatus);
 router.post('/razorpay',           protect, createRazorpayOrder);
 router.post('/place',              protect, placeOrder);
 router.get('/my',                  protect, getMyOrders);
+// Public route — track by orderNumber (no auth needed)
+router.get('/track/:orderNumber', trackOrder);
 router.get('/:id',                 protect, getOrderById);
 router.patch('/:id/cancel',        protect, cancelOrder);
+
 
 
 export default router;
