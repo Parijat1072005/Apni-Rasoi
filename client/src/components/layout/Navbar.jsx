@@ -220,7 +220,7 @@ export default function Navbar() {
                     <>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem asChild>
-                        <a href="http://localhost:5174" target="_blank" rel="noreferrer"
+                        <a href={import.meta.env.VITE_ADMIN_URL || 'http://localhost:5174'} target="_blank" rel="noreferrer"
                           className="flex items-center gap-2 cursor-pointer text-brand-700 font-medium">
                           <LayoutDashboard className="w-4 h-4" /> Admin Dashboard
                         </a>
