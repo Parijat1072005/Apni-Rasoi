@@ -26,9 +26,10 @@ jobs:
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host:     ${{ secrets.AWS_EC2_HOST }}
+          host: ${{ secrets.AWS_EC2_HOST }}
           username: ${{ secrets.AWS_EC2_USER }}
-          key:      ${{ secrets.AWS_EC2_SSH_KEY }}
+          key: ${{ secrets.AWS_EC2_SSH_KEY }}
+          command_timeout: 30m
           script: |
             set -e
             echo "📦 Pulling latest code..."
@@ -52,7 +53,7 @@ jobs:
             sudo systemctl reload nginx
 
             echo "✅ Deployment complete!"
-
+            
       - name: Notify success
         if: success()
         run: echo "🚀 Deployed to production successfully!"
