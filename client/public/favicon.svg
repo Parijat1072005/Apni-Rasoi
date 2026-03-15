@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <!-- Background circle -->
+  <circle cx="16" cy="16" r="16" fill="#14532d"/>
+
+  <!-- Jar lid -->
+  <rect x="10" y="8" width="12" height="3.5" rx="1.5" fill="#ca8a04"/>
+  <rect x="11.5" y="7" width="9" height="2" rx="1" fill="#eab308"/>
+
+  <!-- Jar body -->
+  <rect x="9.5" y="11" width="13" height="13" rx="2.5" fill="#f0fdf4"/>
+  <rect x="9.5" y="11" width="13" height="13" rx="2.5" fill="url(#jarGrad)" opacity="0.9"/>
+
+  <!-- Pickle inside jar -->
+  <ellipse cx="13.5" cy="17.5" rx="2.2" ry="4" fill="#16a34a" transform="rotate(-15 13.5 17.5)"/>
+  <ellipse cx="18.5" cy="17" rx="2" ry="3.8" fill="#15803d" transform="rotate(10 18.5 17)"/>
+
+  <!-- Jar shine -->
+  <rect x="11" y="12.5" width="2" height="5" rx="1" fill="white" opacity="0.3"/>
+
+  <!-- Jar outline -->
+  <rect x="9.5" y="11" width="13" height="13" rx="2.5" stroke="#166534" stroke-width="0.5"/>
+
+  <defs>
+    <linearGradient id="jarGrad" x1="9.5" y1="11" x2="22.5" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#dcfce7"/>
+      <stop offset="100%" stop-color="#bbf7d0"/>
+    </linearGradient>
+  </defs>
+</svg>

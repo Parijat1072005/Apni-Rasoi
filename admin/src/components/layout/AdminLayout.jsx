@@ -20,7 +20,7 @@ export default function AdminLayout() {
             <Menu className="w-5 h-5" />
           </button>
           <div className="flex items-center gap-2 ml-auto">
-            <a href="http://localhost:5173" target="_blank" rel="noreferrer"
+            <a href="https://apnirasoiachaar.com" target="_blank" rel="noreferrer"
               className="text-xs text-brand-600 hover:text-brand-800 border border-brand-200 px-3 py-1.5 rounded-lg transition-colors">
               View Store ↗
             </a>
