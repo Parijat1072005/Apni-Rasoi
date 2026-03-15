@@ -28,6 +28,10 @@ jobs:
             git pull origin main
             git stash drop 2>/dev/null || true
 
+            echo "🔧 Writing env files..."
+            echo "VITE_API_URL=https://apnirasoiachaar.com/api" > client/.env.production
+            echo "VITE_API_URL=https://apnirasoiachaar.com/api" > admin/.env.production
+
             echo "📦 Installing server deps..."
             cd server && npm install --omit=dev && cd ..
 
