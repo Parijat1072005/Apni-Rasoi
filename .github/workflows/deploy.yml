@@ -24,7 +24,9 @@ jobs:
             cd /var/www/apni-rasoi
 
             echo "📦 Pulling latest code..."
+            git stash
             git pull origin main
+            git stash drop 2>/dev/null || true
 
             echo "📦 Installing server deps..."
             cd server && npm install --omit=dev && cd ..
