@@ -104,7 +104,7 @@ export default function HomePage() {
               <h1 className="font-display text-5xl lg:text-7xl font-bold leading-tight mb-6">
                 Taste of <br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-turmeric to-brand-300">
-                  Ghar Ka Khana
+                  Ghar Ka Achaar
                 </span>
               </h1>
               <p className="text-brand-200 text-lg leading-relaxed mb-8 max-w-lg">

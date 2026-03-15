@@ -59,7 +59,7 @@ const divider = `<hr style="border:none;border-top:1px solid #dcfce7;margin:28px
 export const emailTemplates = {
 
   welcome: (name) => ({
-    subject: '🌿 Welcome to Apni Rasoi — Taste of Ghar Ka Khana!',
+    subject: '🌿 Welcome to Apni Rasoi — Taste of Ghar Ka Achaar!',
     html: layout(`
       <h2 style="color:#14532d;font-size:22px;margin:0 0 8px;">Namaste, ${name}! 🙏</h2>
       <p style="color:#166534;font-size:15px;line-height:1.7;font-family:'Arial',sans-serif;margin:0 0 16px;">
