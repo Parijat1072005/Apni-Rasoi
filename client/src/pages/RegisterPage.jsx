@@ -14,7 +14,8 @@ const schema = z.object({
   email:    z.string().email('Valid email required'),
   phone:    z.string().regex(/^[6-9]\d{9}$/, 'Enter valid 10-digit Indian mobile number').optional().or(z.literal('')),
   password: z.string()
-    .min(1, 'Password required'),
+    .min(8, 'At least 8 characters')
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Must contain uppercase, lowercase and number'),
   confirmPassword: z.string(),
 }).refine((d) => d.password === d.confirmPassword, {
   message: 'Passwords do not match',
@@ -80,7 +81,7 @@ export default function RegisterPage() {
                 </Label>
                 <div className="relative">
                   <Input id={id} type={showPassword ? 'text' : 'password'}
-                    placeholder={id === 'password' ? 'Enter your password' : 'Repeat password'}
+                    placeholder={id === 'password' ? 'Min 8 chars, upper, lower, number' : 'Repeat password'}
                     className="border-brand-200 focus:border-brand-500 h-11 pr-10"
                     {...register(id)} />
                   {id === 'password' && (

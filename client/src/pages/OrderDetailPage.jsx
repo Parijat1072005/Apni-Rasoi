@@ -67,18 +67,6 @@ export default function OrderDetailPage() {
         </div>
       </div>
 
-      {order.status === 'delivered' && (
-        <div className="bg-brand-50 rounded-2xl border border-brand-200 p-6 mb-5 text-center shadow-sm">
-          <h3 className="font-display text-xl text-brand-900 mb-2">How was your order?</h3>
-          <p className="text-sm text-brand-700 mb-4 px-4">
-            Your feedback means the world to us! Review your products and help others discover the authentic taste of Apni Rasoi. You might even receive a surprise discount on your next order! 🌿
-          </p>
-          <Button onClick={() => toast.success('Review system coming soon!')} className="bg-brand-700 hover:bg-brand-800 text-white">
-            Review Products Now
-          </Button>
-        </div>
-      )}
-
       {/* Progress Tracker */}
       {order.status !== 'cancelled' && order.status !== 'refunded' && (
         <div className="bg-white rounded-2xl border border-brand-100 p-6 mb-5">
