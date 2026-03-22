@@ -7,7 +7,7 @@ import { ApiResponse } from '../utils/ApiResponse.js';
 const calculateCartTotals = (cart) => {
   const subtotal = cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const discount = cart.coupon?.discount || 0;
-  const shippingCharge = subtotal >= 499 ? 0 : 60;   // Free shipping above ₹499
+  const shippingCharge = subtotal >= 1000 ? 0 : 119;   // Free shipping above ₹1000
   const tax   = Math.round((subtotal - discount) * 0.05); // 5% GST
   const total = subtotal - discount + shippingCharge + tax;
   return { subtotal, discount, shippingCharge, tax, total };

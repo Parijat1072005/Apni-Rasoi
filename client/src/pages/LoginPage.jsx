@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import useAuthStore from '../store/authStore.js';
+import toast from 'react-hot-toast';
 
 const schema = z.object({
   email:    z.string().email('Valid email required'),
@@ -28,8 +29,21 @@ export default function LoginPage() {
 
   const onSubmit = async (data) => {
     const result = await login(data);
-    if (result.success) navigate(from, { replace: true });
-    else setError('root', { message: result.message });
+    if (result.success) {
+      navigate(from, { replace: true });
+    } else {
+      if (result.message === 'Please register first') {
+        toast(result.message, {
+          duration: 7000,
+          position: 'top-center',
+          style: { background: '#f59e0b', color: '#fff' },
+          icon: '⚠️',
+        });
+        navigate('/register');
+      } else {
+        toast.error(result.message, { duration: 7000 });
+      }
+    }
   };
 
   return (

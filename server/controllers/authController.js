@@ -22,13 +22,13 @@ export const register = async (req, res, next) => {
     sendEmail({ to: email, subject, html }).catch(() => {});
 
     const accessToken  = generateAccessToken(user._id);
-    const refreshToken = generateRefreshToken(user._id);
+    const refreshToken = generateRefreshToken(user._id, user.role);
 
     user.refreshToken = refreshToken;
     user.lastLogin = new Date();
     await user.save({ validateBeforeSave: false });
 
-    setRefreshTokenCookie(res, refreshToken);
+    setRefreshTokenCookie(res, refreshToken, user.role);
 
     return ApiResponse.success(res, {
       user: {
@@ -56,7 +56,10 @@ export const login = async (req, res, next) => {
     }
 
     const user = await User.findOne({ email }).select('+password +refreshToken');
-    if (!user || !(await user.comparePassword(password))) {
+    if (!user) {
+      return ApiResponse.error(res, 'Please register first', 404);
+    }
+    if (!(await user.comparePassword(password))) {
       return ApiResponse.error(res, 'Invalid email or password', 401);
     }
 
@@ -65,13 +68,13 @@ export const login = async (req, res, next) => {
     }
 
     const accessToken  = generateAccessToken(user._id);
-    const refreshToken = generateRefreshToken(user._id);
+    const refreshToken = generateRefreshToken(user._id, user.role);
 
     user.refreshToken = refreshToken;
     user.lastLogin = new Date();
     await user.save({ validateBeforeSave: false });
 
-    setRefreshTokenCookie(res, refreshToken);
+    setRefreshTokenCookie(res, refreshToken, user.role);
 
     return ApiResponse.success(res, {
       user: {
@@ -108,12 +111,12 @@ export const refreshAccessToken = async (req, res, next) => {
     }
 
     const newAccessToken  = generateAccessToken(user._id);
-    const newRefreshToken = generateRefreshToken(user._id);
+    const newRefreshToken = generateRefreshToken(user._id, user.role);
 
     user.refreshToken = newRefreshToken;
     await user.save({ validateBeforeSave: false });
 
-    setRefreshTokenCookie(res, newRefreshToken);
+    setRefreshTokenCookie(res, newRefreshToken, user.role);
 
     return ApiResponse.success(res, { accessToken: newAccessToken }, 'Token refreshed');
   } catch (error) {
@@ -198,8 +201,8 @@ export const resetPassword = async (req, res, next) => {
     const { token } = req.params;
     const { password } = req.body;
 
-    if (!password || password.length < 8) {
-      return ApiResponse.error(res, 'Password must be at least 8 characters', 400);
+    if (!password || password.length < 1) {
+      return ApiResponse.error(res, 'Password is required', 400);
     }
 
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
@@ -235,8 +238,8 @@ export const changePassword = async (req, res, next) => {
       return ApiResponse.error(res, 'Current password is incorrect', 400);
     }
 
-    if (newPassword.length < 8) {
-      return ApiResponse.error(res, 'New password must be at least 8 characters', 400);
+    if (!newPassword || newPassword.length < 1) {
+      return ApiResponse.error(res, 'New password is required', 400);
     }
 
     user.password = newPassword;

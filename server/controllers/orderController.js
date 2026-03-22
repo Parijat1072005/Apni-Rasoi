@@ -31,8 +31,11 @@ export const createRazorpayOrder = async (req, res, next) => {
     }
 
     const subtotal = cart.items.reduce((s, i) => s + i.price * i.quantity, 0);
+    if (subtotal < 499) {
+      return ApiResponse.error(res, 'Minimum order amount is ₹499', 400);
+    }
     const discount = cart.coupon?.discount || 0;
-    const shippingCharge = subtotal >= 499 ? 0 : 60;
+    const shippingCharge = subtotal >= 1000 ? 0 : 119;
     const tax = Math.round((subtotal - discount) * 0.05);
     const total = subtotal - discount + shippingCharge + tax;
 
@@ -113,8 +116,11 @@ export const placeOrder = async (req, res, next) => {
 
     // ── Calculate pricing ─────────────────────────────────────────────────
     const subtotal = cart.items.reduce((s, i) => s + i.price * i.quantity, 0);
+    if (subtotal < 499) {
+      return ApiResponse.error(res, 'Minimum order amount is ₹499', 400);
+    }
     const discount = cart.coupon?.discount || 0;
-    const shippingCharge = subtotal >= 499 ? 0 : 60;
+    const shippingCharge = subtotal >= 1000 ? 0 : 119;
     const tax = Math.round((subtotal - discount) * 0.05);
     const total = subtotal - discount + shippingCharge + tax;
 

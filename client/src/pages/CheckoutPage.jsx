@@ -311,10 +311,16 @@ export default function CheckoutPage() {
                 <span className="text-xl">₹{totals.total}</span>
               </div>
 
+              {totals.subtotal < 499 && (
+                <div className="bg-red-50 text-red-600 border border-red-200 text-sm rounded-lg p-3 mb-4 text-center">
+                  Minimum order amount is ₹499. Please add more items to your cart.
+                </div>
+              )}
+
               <Button
                 type="submit"
-                disabled={placing}
-                className="w-full bg-brand-700 hover:bg-brand-800 text-white font-bold py-5 text-base">
+                disabled={placing || totals.subtotal < 499}
+                className="w-full bg-brand-700 hover:bg-brand-800 text-white font-bold py-5 text-base disabled:opacity-50">
                 {placing
                   ? 'Processing...'
                   : payMethod === 'cod'

@@ -42,13 +42,13 @@ export default function Footer() {
               traditional recipes, and the finest ingredients.
             </p>
             <div className="space-y-2 mb-6">
-              <a href="mailto:hello@apnirasoi.com"
+              <a href="mailto:parijat1072005@gmail.com"
                 className="flex items-center gap-2.5 text-brand-300 hover:text-white text-sm transition-colors">
-                <Mail className="w-4 h-4 shrink-0" /> hello@apnirasoi.com
+                <Mail className="w-4 h-4 shrink-0" /> parijat1072005@gmail.com
               </a>
-              <a href="tel:+919999999999"
+              <a href="tel:+919311843699"
                 className="flex items-center gap-2.5 text-brand-300 hover:text-white text-sm transition-colors">
-                <Phone className="w-4 h-4 shrink-0" /> +91 99999 99999
+                <Phone className="w-4 h-4 shrink-0" /> +91 9311843699
               </a>
               <div className="flex items-center gap-2.5 text-brand-300 text-sm">
                 <MapPin className="w-4 h-4 shrink-0" /> New Delhi, India
