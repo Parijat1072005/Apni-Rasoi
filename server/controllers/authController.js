@@ -60,7 +60,7 @@ export const login = async (req, res, next) => {
       return ApiResponse.error(res, 'Please register first', 404);
     }
     if (!(await user.comparePassword(password))) {
-      return ApiResponse.error(res, 'Password is wrong, please try again', 401);
+      return ApiResponse.error(res, 'Invalid email or password', 401);
     }
 
     if (user.isBlocked) {
